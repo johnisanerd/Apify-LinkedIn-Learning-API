@@ -45,9 +45,10 @@ SMALL = 5
 
 def client() -> ApifyClient:
     token = os.getenv("APIFY_API_TOKEN") or os.getenv("APIFY_TOKEN")
-    if not token or token == "your_apify_api_token_here":
+    if not token or token in ("your_apify_api_token_here", "paste_your_real_token_here"):
         sys.exit(
-            "Set APIFY_API_TOKEN first. Copy .env.example to .env and paste your token.\n"
+            "Set APIFY_API_TOKEN first: copy .env.example to .env and paste your token, "
+            "or export APIFY_API_TOKEN in your shell.\n"
             "Get one free: https://apify.com?fpr=9n7kx3"
         )
     return ApifyClient(token)
@@ -91,8 +92,9 @@ def run_default(api: ApifyClient) -> None:
     """Cheap general quick-start: one keyword search, five rows.
 
     Shows the search-mode filters without raising the cost. Every value here
-    comes from the Actor's input schema; the filters are left wide so the
-    query still matches plenty of courses.
+    comes from the Actor's input schema; sortBy, difficultyLevel and duration
+    are left at their wide defaults; entityType is set to COURSE so the five
+    rows are all full courses rather than single videos or paths.
     """
     print("\n=== Search: python courses (default cheap run) ===")
     # Inputs are kept small (one query, maxItems=5) to keep this first run

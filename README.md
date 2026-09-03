@@ -8,9 +8,9 @@ A Python and MCP quick-start for the **LinkedIn Learning API** on Apify. Search 
 
 LinkedIn's own Learning API is available only through its Partner Program or a purchased site license, with OAuth keys an admin has to provision. This Actor reads the pages LinkedIn Learning already publishes to logged-out visitors and returns the same catalog metadata as JSON: course title, link, instructors, duration, viewer count and thumbnail from a search, or the full record with reviews and table of contents from a course URL. It covers the public catalog only. LinkedIn's reporting API, which returns learner activity for a licensed organization, is a different product and nothing here reads it. You pay per row: $0.10 per 1,000 search results and $0.50 per 1,000 full course records. Apify also applies its platform accounting events, $0.00001 per Actor start (one event per GB of run memory, at least one) and $0.00001 per stored dataset row.
 
-## Video Walkthrough
+## Video: Build MCP servers with Apify
 
-[![Watch the walkthrough](https://img.youtube.com/vi/jREWahDGhJM/maxresdefault.jpg)](https://www.youtube.com/watch?v=jREWahDGhJM)
+[![Apify MCP servers overview](https://img.youtube.com/vi/jREWahDGhJM/maxresdefault.jpg)](https://www.youtube.com/watch?v=jREWahDGhJM)
 
 ### Text walkthrough
 
@@ -43,7 +43,7 @@ Every example asks for a small number of rows on purpose. You pay per row delive
 If you do not want a `.env` file, export the token instead:
 
 ```bash
-export APIFY_API_TOKEN="your_apify_api_token_here"
+export APIFY_API_TOKEN="paste_your_real_token_here"   # replace with the token from your Apify account
 uv run python linkedin-learning-api-example.py
 ```
 
@@ -69,7 +69,7 @@ A full course record carries `reviews` whenever the course page publishes writte
 
 ## LinkedIn Learning course catalog and course list past the 50-result cap
 
-LinkedIn shows at most 50 results for any one search. Run search mode across a set of keywords or topic pages, turn on `expandWithFilters` to get past that ceiling, and export the dataset as JSON, CSV or Excel. `expandWithFilters` repeats each query across LinkedIn's own filter combinations and merges the unique courses; rows deduplicate on `courseId` (lessons on their own URL), so a course reached through two slugs is returned once. It is the closest thing to a LinkedIn Learning course catalog download that needs no account.
+LinkedIn shows at most 50 results for any one search. Run search mode across a set of keywords or topic pages, turn on `expandWithFilters` to get past that ceiling, and export the dataset as JSON, CSV or Excel. `expandWithFilters` repeats each query across LinkedIn's own filter combinations and merges the unique courses; within each query rows deduplicate on `courseId`, lessons on their own URL, so a course reached through two slugs is returned once; a course that matches two different `queries` appears once under each `searchQuery`. It is the closest thing to a LinkedIn Learning course catalog download that needs no account.
 
 ## LinkedIn Learning learning paths, lessons and courses, told apart
 
@@ -84,13 +84,13 @@ LinkedIn shows at most 50 results for any one search. Run search mode across a s
 - LinkedIn Learning learning paths: details mode takes course, lesson and learning path URLs, up to 200 per run, and returns a `course_detail`, `lesson` or `learning_path` row for each.
 - `enrichDetails` turns a search into full course records in one run, billed once per row at the full-record rate.
 - LinkedIn Learning free courses: `freeLessonCount` and the per-lesson `isFree` flag in `tableOfContents` show how much of each course is watchable without a subscription.
-- Online courses dataset: run many `queries` or `topics` in one search and export the merged rows as JSON, CSV or Excel.
+- Online courses dataset: run many `queries` or `topics` in one search and export the rows from every query, each labelled with its `searchQuery`, as JSON, CSV or Excel.
 
 ### Data Quality
 
 - Each review carries `body`, `rating`, `authorName`, `authorJobTitle`, `authorProfileUrl` and `datePublished`.
 - Every lesson in `tableOfContents` has its own `description`, `durationSeconds`, `url` and `isFree` flag.
-- `courseUrl` is the canonical link with tracking parameters stripped; rows deduplicate on `courseId` (lessons on their own URL), so a course reached through two slugs is returned once.
+- `courseUrl` is the canonical link with tracking parameters stripped; within each query (and within a details run) rows deduplicate on `courseId`, lessons on their own URL, so a course reached through two slugs is returned once; a course that matches two different `queries` appears once under each `searchQuery`.
 - `no_results` and `error` rows are pushed so you can see what failed, and are never billed at the course-found or course-detail rate.
 
 ## Recipes
@@ -103,7 +103,7 @@ Ready-made configurations with their own Store landing pages:
 - [Build a LinkedIn Learning Course Ratings Dataset](https://apify.com/johnvc/linkedin-learning-api/examples/linkedin-learning-course-ratings-dataset?fpr=9n7kx3): search `"python"` with `enrichDetails` true and `maxItems` 5, so each course row is a full record with rating, rating count, learner numbers, level and duration (learning path hits stay as search rows).
 - [Track New LinkedIn Learning Course Releases](https://apify.com/johnvc/linkedin-learning-api/examples/track-new-linkedin-learning-courses?fpr=9n7kx3): search `"artificial intelligence"` with `sortBy` `RECENCY`, newest first. Local: `uv run python linkedin-learning-api-example.py --example new-courses`
 
-**Schedule tip.** Save any of these inputs as a Task on the [Actor page](https://apify.com/johnvc/linkedin-learning-api?fpr=9n7kx3) and schedule it to run weekly. With `sortBy` set to `RECENCY` the dataset lists the newest courses on a topic every week, and with `enrichDetails` on it refreshes ratings and review counts, without anyone touching it.
+**Schedule tip.** Save any of these inputs as a Task on the [Actor page](https://apify.com/johnvc/linkedin-learning-api?fpr=9n7kx3) and schedule it to run weekly. With `sortBy` set to `RECENCY` the dataset lists the newest courses on a topic every week, and with `enrichDetails` on it refreshes `ratingValue`, `ratingCount` and the written `reviews` for every course, without anyone touching it.
 
 ## Usage Examples
 
@@ -330,7 +330,7 @@ Neither. The official LinkedIn Learning API and the LinkedIn Learning reporting 
 
 ### Where is the LinkedIn Learning API documentation for this Actor?
 
-The [input schema](https://apify.com/johnvc/linkedin-learning-api/input-schema?fpr=9n7kx3) documents every parameter, the Output Format section above documents the fields you will use most, and the two sample rows show the full shape of a search result and a full course record. The Actor page's API tab shows the REST API calls that start a run from curl, Node or Python, for any integration that cannot use this Python client.
+The [input schema](https://apify.com/johnvc/linkedin-learning-api/input-schema?fpr=9n7kx3) documents every parameter, the Output Format section above documents the fields you will use most, and the two sample rows show the full shape of a search result and a full course record. The Actor page's API tab shows the REST API calls that start a run from curl, Node or Python, for any API integration that cannot use this Python client.
 
 ### How do I use the LinkedIn Learning API from Python?
 
