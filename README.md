@@ -14,7 +14,7 @@ LinkedIn's own Learning API is available only through its Partner Program or a p
 
 ### Text walkthrough
 
-The **LinkedIn Learning API** has two modes, set by `mode`. In `search` mode you pass `queries` (up to 25 keywords) or `topics`, optionally narrowed by `sortBy`, `difficultyLevel`, `entityType`, `duration` and `softwareNames`, and each course comes back as a `search_result` row with `title`, `courseUrl`, `courseId`, `entityType`, `instructors`, `durationText`, `viewersText`, `releaseText` and `thumbnailUrl`. LinkedIn serves at most 50 results per query, so `expandWithFilters` re-runs the query across LinkedIn's own filter combinations and merges the unique courses when you need a fuller course list. In `details` mode you pass `courseUrls` (course, lesson or learning path links, up to 200) and get a `course_detail` row with `ratingValue`, `ratingCount`, `enrollmentCount`, `reviews`, `tableOfContents` with a per-lesson `isFree` flag, `skills`, `instructors`, `lessonCount`, `freeLessonCount`, `hasCertificate` and `certificateName`. Setting `enrichDetails` to `true` on a search opens each found course and returns the full record instead, billed once at the full-record rate. The published task [Extract LinkedIn Learning Course Reviews and Ratings](https://apify.com/johnvc/linkedin-learning-api/examples/extract-linkedin-learning-course-reviews?fpr=9n7kx3) runs details mode on three course URLs and returns the written review text with each reviewer's name, job title and profile link; `run_course_reviews()` in the example file is the same call from Python.
+The **LinkedIn Learning API** has two modes, set by `mode`. In `search` mode you pass `queries` (up to 25 keywords) or `topics`, optionally narrowed by `sortBy`, `difficultyLevel`, `entityType`, `duration` and `softwareNames`, and each course comes back as a `search_result` row with `title`, `courseUrl`, `courseId`, `entityType`, `instructors`, `durationText`, `viewersText`, `releaseText` and `thumbnailUrl`. LinkedIn serves at most 50 results per query, so `expandWithFilters` re-runs the query across LinkedIn's own filter combinations and merges the unique courses when you need a fuller course list. In `details` mode you pass `courseUrls` (course, lesson or learning path links, up to 200) and get a `course_detail` row with `ratingValue`, `ratingCount`, `enrollmentCount`, `reviews`, `tableOfContents` with a per-lesson `isFree` flag, `skills`, `instructors`, `lessonCount`, `freeLessonCount`, `hasCertificate` and `certificateName`. Setting `enrichDetails` to `true` on a search opens each found course and returns the full record instead, billed once at the full-record rate. The published task [Extract LinkedIn Learning Course Reviews and Ratings](https://apify.com/johnvc/linkedin-learning-api/examples/extract-linkedin-learning-course-reviews?fpr=9n7kx3) runs details mode on three course URLs and returns the written review text with each reviewer's name, job title and profile link; `run_course_reviews()` in the example file makes the same details-mode call from Python, trimmed to the first of those three URLs so the first run costs $0.0005.
 
 ## Quick Start
 
@@ -49,25 +49,41 @@ uv run python linkedin-learning-api-example.py
 
 ## Why use this LinkedIn Learning API
 
-**It needs no login and no site license.** The Actor reads only what LinkedIn Learning shows a logged-out visitor. There is no field for a session cookie and no OAuth step. Anyone with a free Apify token can run it.
+### No login and no site license
 
-**LinkedIn Learning reviews with the reviewer's identity.** Every full course record carries `reviews`: the review text, its star `rating`, and the reviewer's `authorName`, `authorJobTitle` and `authorProfileUrl`, plus `datePublished`. Other course data tools stop at the star average and rating count; the written text and who wrote it are only on the course page.
+The Actor reads only what LinkedIn Learning shows a logged-out visitor. There is no field for a session cookie and no OAuth step. Anyone with a free Apify token can run it.
 
-**The full syllabus, lesson by lesson.** `tableOfContents` lists every section and lesson with its own `title`, `description`, `durationSeconds`, `url` and an `isFree` flag, with `freeLessonCount` totalled on the course. That is how you find the LinkedIn Learning free courses and preview lessons without opening each page.
+### LinkedIn Learning reviews with the reviewer's identity
 
-**A course catalog you can export.** Run search mode across a set of keywords or topic pages, turn on `expandWithFilters` to get past the 50-per-query ceiling, and export the dataset as JSON, CSV or Excel. It is the closest thing to a LinkedIn Learning course catalog download that needs no account. The same run is the quickest route to a LinkedIn Learning course list past the 50-result cap, or to a broader online courses dataset built from many queries.
+A full course record carries `reviews` whenever the course page publishes written reviews: the review text, its star `rating`, and the reviewer's `authorName`, `authorJobTitle` and `authorProfileUrl`, plus `datePublished`. Other course data tools stop at the star average and rating count; the written text and who wrote it are only on the course page.
 
-**LinkedIn Learning learning paths, lessons and courses, told apart.** `entityType` separates `COURSE`, `VIDEO` and `LEARNING PATH` in search results. A learning path URL in details mode returns `pathUrl`, `courseCount` and the ordered `courses` inside it; a lesson URL returns that lesson joined to its parent `courseId`.
+### The full syllabus, lesson by lesson
 
-**Pay for the rows you receive.** Search results are billed on the course-found event at $0.10 per 1,000; full records on course-detail at $0.50 per 1,000. Duplicates, error rows and the popular-courses page LinkedIn substitutes when a query matches nothing are never charged.
+`tableOfContents` lists every section and lesson with its own `title`, `description`, `durationSeconds`, `url` and an `isFree` flag, with `freeLessonCount` totalled on the course. That is how you find the LinkedIn Learning free courses and preview lessons without opening each page.
+
+### A LinkedIn Learning course catalog you can export
+
+Run search mode across a set of keywords or topic pages, turn on `expandWithFilters` to get past the 50-per-query ceiling, and export the dataset as JSON, CSV or Excel. It is the closest thing to a LinkedIn Learning course catalog download that needs no account.
+
+### A LinkedIn Learning course list past the 50-result cap
+
+LinkedIn shows at most 50 results for any one search. The same run is the quickest route to a LinkedIn Learning course list longer than that, or to a broader online courses dataset built from many queries: `expandWithFilters` repeats each query across LinkedIn's own filter combinations and merges the unique courses, and rows deduplicate on `courseUrl`.
+
+### LinkedIn Learning learning paths, lessons and courses, told apart
+
+`entityType` separates `COURSE`, `VIDEO` and `LEARNING PATH` in search results. A learning path URL in details mode returns `pathUrl`, `courseCount` and the ordered `courses` inside it; a lesson URL returns that lesson joined to its parent `courseId`.
+
+### Pay for the rows you receive
+
+Search results are billed on the course-found event at $0.10 per 1,000; full records on course-detail at $0.50 per 1,000. Duplicates, error rows and the popular-courses page LinkedIn substitutes when a query matches nothing are never charged.
 
 ## Features
 
 ### Core Capabilities
 
 - Search by `queries` or `topics`, narrowed with `sortBy`, `difficultyLevel`, `entityType`, `duration` and `softwareNames`.
-- `expandWithFilters` re-runs a query across LinkedIn's own filter combinations, the only route past the 50-results-per-query cap.
-- Details mode takes course, lesson and learning path URLs, up to 200 per run, and returns a `course_detail`, `lesson` or `learning_path` row for each.
+- LinkedIn Learning course catalog download: `expandWithFilters` re-runs a query across LinkedIn's own filter combinations, the only route past the 50-results-per-query cap, so a LinkedIn Learning course list or courses list longer than 50 rows comes from one run.
+- LinkedIn Learning learning paths: details mode takes course, lesson and learning path URLs, up to 200 per run, and returns a `course_detail`, `lesson` or `learning_path` row for each.
 - `enrichDetails` turns a search into full course records in one run, billed once per row at the full-record rate.
 
 ### Data Quality
@@ -110,8 +126,8 @@ Advanced, a filtered search enriched to full records:
 ```json
 {
   "mode": "search",
-  "queries": ["excel", "sql"],
-  "softwareNames": ["Microsoft Excel", "SQL"],
+  "queries": ["excel"],
+  "softwareNames": ["Microsoft Excel"],
   "difficultyLevel": "BEGINNER",
   "duration": "BETWEEN_1_TO_2_HOURS",
   "sortBy": "POPULARITY",
@@ -146,7 +162,7 @@ Only `mode` is required. Search settings apply when `mode` is `search`; `courseU
 | `difficultyLevel` | string | no | `ANY` | `ANY`, `BEGINNER`, `INTERMEDIATE` or `ADVANCED`. |
 | `entityType` | string | no | `ANY` | `ANY`, `COURSE`, `VIDEO` or `LEARNING_PATH`. |
 | `duration` | string | no | `ANY` | `ANY`, `BETWEEN_0_TO_10_MIN`, `BETWEEN_10_TO_30_MIN`, `BETWEEN_30_TO_60_MIN`, `BETWEEN_1_TO_2_HOURS`, `BETWEEN_2_TO_3_HOURS` or `MORE_THAN_3_HOURS`. |
-| `softwareNames` | array of string | no | `[]` | Keep only courses that teach these tools, using LinkedIn's own labels such as Python, Microsoft Excel, SQL, ChatGPT or Claude. Up to 10. |
+| `softwareNames` | array of string | no | `[]` | Keep only courses that teach this tool, using LinkedIn's own label such as Python, Microsoft Excel, SQL, ChatGPT or Claude. The schema accepts up to 10 values, but LinkedIn applies one label per search, so run one label per query. |
 | `maxItems` | integer | no | `50` | Courses to return per query, 1 to 1000. LinkedIn serves at most 50 per query and filter combination, so ask for more only with `expandWithFilters` on. |
 | `expandWithFilters` | boolean | no | `false` | Run the same query again across LinkedIn's own filter combinations and merge the unique courses. The only way past the 50-per-query ceiling; returns more billable rows. |
 | `enrichDetails` | boolean | no | `false` | Open each course found by the search and return its full record. Enriched rows are billed at the full-record rate instead of the search rate, never both. |
@@ -269,9 +285,10 @@ Fields you will use most:
 | `skills` | array | detail | Skills taught, each linked to its LinkedIn Learning topic page. |
 | `hasCertificate`, `certificateName` | boolean, string | detail | Whether a certificate of completion is awarded, and its name. |
 | `pathUrl`, `courses`, `courseCount` | string, array, integer | learning path | The path link, its ordered member courses and how many there are. |
+| `httpStatus` | integer | error | Status code LinkedIn returned, when there was one. |
 | `fetchedAt` | string | all | When the row was collected, in UTC. |
 
-`no_results` and `error` rows carry only `resultType`, `searchQuery` or `sourceUrl`, a `message` or an `errorType` with `errorMessage`, and `fetchedAt`. Learning path rows use `pathUrl` in place of `courseUrl`.
+`no_results` and `error` rows carry only `resultType`, `searchQuery` or `sourceUrl`, a `message` or an `errorType` with `errorMessage` (plus `httpStatus` when LinkedIn returned one), and `fetchedAt`. Learning path rows use `pathUrl` in place of `courseUrl`.
 
 ## People also search for
 
@@ -313,7 +330,7 @@ Neither. The official LinkedIn Learning API and the LinkedIn Learning reporting 
 
 ### Where is the LinkedIn Learning API documentation for this Actor?
 
-The [input schema](https://apify.com/johnvc/linkedin-learning-api/input-schema?fpr=9n7kx3) documents every parameter, and the Output Format section above documents every field. The Actor page's API tab shows how to start a run over the Apify REST API from curl, Node or Python, which is the LinkedIn Learning REST API route for an integration that cannot use this client.
+The [input schema](https://apify.com/johnvc/linkedin-learning-api/input-schema?fpr=9n7kx3) documents every parameter, the Output Format section above documents the fields you will use most, and the two sample rows show the full shape of a search result and a full course record. The Actor page's API tab shows how to start a run over the Apify REST API from curl, Node or Python, which is the LinkedIn Learning REST API route for a LinkedIn Learning API integration that cannot use this client.
 
 ### How do I use the LinkedIn Learning API from Python?
 

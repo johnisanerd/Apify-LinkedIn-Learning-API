@@ -159,12 +159,13 @@ def run_course_reviews(api: ApifyClient) -> None:
             continue
         print(f"{course.get('title')}  ({course.get('difficultyLevel')}, {course.get('language')})")
         # ratingCount and enrollmentCount are absent on a course with no
-        # ratings, so guard them before the thousands-separator format.
+        # ratings, and freeLessonCount is absent when no lesson is free (the
+        # Actor drops empty fields), so guard them all before formatting.
         rating_count = course.get("ratingCount") or 0
         learners = course.get("enrollmentCount") or 0
         print(f"  rating {course.get('ratingValue')} from {rating_count:,} ratings, "
               f"{learners:,} learners")
-        print(f"  {course.get('lessonCount')} lessons, {course.get('freeLessonCount')} free to watch, "
+        print(f"  {course.get('lessonCount') or 0} lessons, {course.get('freeLessonCount') or 0} free to watch, "
               f"certificate: {course.get('hasCertificate')}")
         print(f"  skills: {', '.join(s.get('name', '') for s in course.get('skills') or [])}")
         reviews = course.get("reviews") or []
