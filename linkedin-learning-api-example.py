@@ -25,6 +25,7 @@ Pick one example:
 """
 
 import argparse
+import json
 import os
 import sys
 
@@ -43,10 +44,10 @@ SMALL = 5
 
 
 def client() -> ApifyClient:
-    token = os.getenv("APIFY_TOKEN") or os.getenv("APIFY_API_TOKEN")
+    token = os.getenv("APIFY_API_TOKEN") or os.getenv("APIFY_TOKEN")
     if not token or token == "your_apify_api_token_here":
         sys.exit(
-            "Set APIFY_TOKEN first. Copy .env.example to .env and paste your token.\n"
+            "Set APIFY_API_TOKEN first. Copy .env.example to .env and paste your token.\n"
             "Get one free: https://apify.com?fpr=9n7kx3"
         )
     return ApifyClient(token)
@@ -119,11 +120,12 @@ def run_course_catalog_export(api: ApifyClient) -> None:
     https://apify.com/johnvc/linkedin-learning-api/examples/linkedin-learning-course-data-json?fpr=9n7kx3
 
     Same shape as the published task (search mode, one query) with maxItems
-    clamped from 25 to 5 for a cheap first run. To build a fuller course
-    catalog, raise maxItems and set expandWithFilters to true, which is the
-    only way past LinkedIn's 50-results-per-query ceiling.
+    clamped from 25 to 5 for a cheap first run. Each row is printed as JSON
+    so you can see every field name, including thumbnailUrl. To build a
+    fuller course catalog, raise maxItems and set expandWithFilters to true,
+    which is the only way past LinkedIn's 50-results-per-query ceiling.
     """
-    print("\n=== Course catalog export: project management ===")
+    print("\n=== Course catalog as JSON: project management ===")
     results = rows(api, {
         "mode": "search",
         "queries": ["project management"],
@@ -133,8 +135,7 @@ def run_course_catalog_export(api: ApifyClient) -> None:
         if row.get("resultType") != "search_result":
             print_search_row(row)
             continue
-        print(f"{row.get('title')[:56]:<58} {row.get('durationText') or '':<8} "
-              f"{names(row.get('instructors'))[:30]:<32} {row.get('courseUrl')}")
+        print(json.dumps(row, indent=2))
 
 
 def run_course_reviews(api: ApifyClient) -> None:
@@ -157,8 +158,12 @@ def run_course_reviews(api: ApifyClient) -> None:
             print_search_row(course)
             continue
         print(f"{course.get('title')}  ({course.get('difficultyLevel')}, {course.get('language')})")
-        print(f"  rating {course.get('ratingValue')} from {course.get('ratingCount'):,} ratings, "
-              f"{course.get('enrollmentCount'):,} learners")
+        # ratingCount and enrollmentCount are absent on a course with no
+        # ratings, so guard them before the thousands-separator format.
+        rating_count = course.get("ratingCount") or 0
+        learners = course.get("enrollmentCount") or 0
+        print(f"  rating {course.get('ratingValue')} from {rating_count:,} ratings, "
+              f"{learners:,} learners")
         print(f"  {course.get('lessonCount')} lessons, {course.get('freeLessonCount')} free to watch, "
               f"certificate: {course.get('hasCertificate')}")
         print(f"  skills: {', '.join(s.get('name', '') for s in course.get('skills') or [])}")
@@ -191,7 +196,7 @@ def run_track_new_courses(api: ApifyClient) -> None:
         if row.get("resultType") != "search_result":
             print_search_row(row)
             continue
-        print(f"{row.get('releaseText') or '':<24} {row.get('title')[:60]:<62} "
+        print(f"{row.get('releaseText') or '':<24} {(row.get('title') or '')[:60]:<62} "
               f"{names(row.get('instructors'))[:30]}")
 
 
