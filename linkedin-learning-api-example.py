@@ -77,7 +77,9 @@ def print_search_row(row: dict) -> None:
         print(f"  no match: {row.get('message')}")
         return
     if kind == "error":
-        print(f"  error: {row.get('errorMessage')} ({row.get('sourceUrl')})")
+        # An invalid-input error names no URL, so only append one when present.
+        where = row.get("sourceUrl")
+        print(f"  error: {row.get('errorMessage')}" + (f" ({where})" if where else ""))
         return
     print(f"\n{row.get('position')}. {row.get('title')}  [{row.get('entityType')}]")
     print(f"  by {names(row.get('instructors'))}")
@@ -94,8 +96,9 @@ def run_default(api: ApifyClient) -> None:
     """
     print("\n=== Search: python courses (default cheap run) ===")
     # Inputs are kept small (one query, maxItems=5) to keep this first run
-    # inexpensive: five search rows cost $0.0005. Raise maxItems once you
-    # have your own API token and know your budget.
+    # inexpensive: five search rows cost about $0.0005, plus Apify's platform
+    # accounting events of $0.00001 per run start and per stored row. Raise
+    # maxItems once you have your own API token and know your budget.
     results = rows(api, {
         "mode": "search",
         "queries": ["python"],
@@ -145,8 +148,10 @@ def run_course_reviews(api: ApifyClient) -> None:
     https://apify.com/johnvc/linkedin-learning-api/examples/extract-linkedin-learning-course-reviews?fpr=9n7kx3
 
     Details mode on one real course URL from that task (it uses three). One
-    full course record costs $0.0005 and carries ratingValue, ratingCount,
-    enrollmentCount, reviews, tableOfContents, skills and certificate fields.
+    full course record costs about $0.0005 (plus Apify's platform accounting
+    events of $0.00001 per run start and per stored row) and carries
+    ratingValue, ratingCount, enrollmentCount, reviews, tableOfContents, skills
+    and certificate fields.
     """
     print("\n=== Course reviews: Python Essential Training ===")
     results = rows(api, {
