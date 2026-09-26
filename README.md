@@ -491,4 +491,4 @@ For support or requests for this actor, please start a ticket [directly on our s
 
 Made with care by [johnvc on Apify](https://apify.com/johnvc?fpr=9n7kx3).
 
-Last Updated: 2026.09.25
+Last Updated: 2026.09.26
