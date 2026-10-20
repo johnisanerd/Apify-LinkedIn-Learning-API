@@ -303,6 +303,10 @@ Open a ready-to-send prompt about the LinkedIn Learning API in the AI of your ch
 
 ## People also search for
 
+### Will this put my LinkedIn or LinkedIn Recruiter account at risk?
+
+No. It reads public LinkedIn pages only, the ones anyone can open while signed out. It never logs in and never asks for your cookies: there is no input for an account, a password or an `li_at` session cookie. Nothing it does is tied to your LinkedIn account, your LinkedIn Learning license, your LinkedIn Recruiter seat or your Sales Navigator license. The requests run on Apify's servers, not in your browser, so nothing connects them to you, and you can keep working in Recruiter while a run is going.
+
 ### Does LinkedIn Learning give certificates?
 
 Yes, a certificate of completion, and every full course record reports it in `hasCertificate` and `certificateName` (for example `LinkedIn Learning Certificate of Completion`). It is a certificate of completion rather than an accredited qualification.
